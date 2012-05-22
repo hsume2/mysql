@@ -1267,21 +1267,20 @@ static void check_stmt_closed(VALUE obj)
 static void mysql_stmt_raise(MYSQL_STMT* s, char *note)
 {
     char *message = mysql_stmt_error(s);
-    VALUE rb_message = rb_str_new2(message);
+    unsigned int errno = mysql_stmt_errno(s);
+    char *sqlstate = mysql_stmt_sqlstate(s);
+    VALUE rb_exc_message;
     VALUE e;
 
     if(strlen(message) > 0) {
-        rb_str_cat2(rb_message, ", mysql_stmt_raise, ");
-        rb_str_cat2(rb_message, note);
-        e = rb_exc_new3(eMysql, rb_message);
+        rb_exc_message = rb_sprintf("%s, mysql_stmt_raise, (%i, %s, %s)", message, errno, sqlstate, note);
     } else {
-        rb_str_cat2(rb_message, "no error message, mysql_stmt_raise, ");
-        rb_str_cat2(rb_message, note);
-        e = rb_exc_new3(eMysql, rb_message);
+        rb_exc_message = rb_sprintf("no error message, mysql_stmt_raise, (%i, %s, %s)", errno, sqlstate, note);
     }
+    e = rb_exc_new3(eMysql, rb_exc_message);
 
-    rb_iv_set(e, "errno", INT2FIX(mysql_stmt_errno(s)));
-    rb_iv_set(e, "sqlstate", rb_tainted_str_new2(mysql_stmt_sqlstate(s)));
+    rb_iv_set(e, "errno", INT2FIX(errno));
+    rb_iv_set(e, "sqlstate", rb_tainted_str_new2(sqlstate));
     rb_exc_raise(e);
 }
 
