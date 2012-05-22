@@ -1458,10 +1458,18 @@ static VALUE stmt_execute(int argc, VALUE *argv, VALUE obj)
     }
 
     int our_result = mysql_stmt_execute(stmt);
-    char our_result_flag[8];
-    sprintf(our_result_flag, "C:%i", our_result);
-    if (our_result)
-	mysql_stmt_raise(stmt, our_result_flag);
+    if (our_result) {
+        char our_result_flag[16];
+        int missing_mysql = 0;
+        int our_stmt_state = (int) stmt->state;
+
+        if(!stmt->mysql) {
+            missing_mysql = 1;
+        }
+
+        sprintf(our_result_flag, "C2:[%i,%i,%i]", our_result, missing_mysql, our_stmt_state);
+        mysql_stmt_raise(stmt, our_result_flag);
+    }
     if (s->res) {
 	MYSQL_FIELD *field;
 	if (mysql_stmt_store_result(stmt))
