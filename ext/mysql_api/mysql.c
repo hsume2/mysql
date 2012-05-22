@@ -1681,8 +1681,11 @@ static VALUE stmt_prepare(VALUE obj, VALUE query)
     free_mysqlstmt_memory(s);
     check_stmt_closed(obj);
     Check_Type(query, T_STRING);
-    if (mysql_stmt_prepare(s->stmt, RSTRING_PTR(query), RSTRING_LEN(query)))
-	mysql_stmt_raise(s->stmt, "H");
+    int our_result = mysql_stmt_prepare(s->stmt, RSTRING_PTR(query), RSTRING_LEN(query));
+    char our_result_flag[8];
+    sprintf(our_result_flag, "H:%i", our_result);
+    if (our_result)
+	mysql_stmt_raise(s->stmt, our_result_flag);
 
     n = mysql_stmt_param_count(s->stmt);
     s->param.n = n;
