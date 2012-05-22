@@ -1457,8 +1457,11 @@ static VALUE stmt_execute(int argc, VALUE *argv, VALUE obj)
             mysql_stmt_raise(stmt, "B");
     }
 
-    if (mysql_stmt_execute(stmt))
-	mysql_stmt_raise(stmt, "C");
+    int our_result = mysql_stmt_execute(stmt);
+    char our_result_flag[8];
+    sprintf(our_result_flag, "C:%i", our_result);
+    if (our_result)
+	mysql_stmt_raise(stmt, our_result_flag);
     if (s->res) {
 	MYSQL_FIELD *field;
 	if (mysql_stmt_store_result(stmt))
